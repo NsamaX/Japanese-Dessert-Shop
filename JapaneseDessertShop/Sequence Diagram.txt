@@ -1,0 +1,126 @@
+sequenceDiagram
+    participant Product
+    participant ProductFactory
+    participant Owner
+    participant User
+    participant System
+    participant MenuView
+    participant OrderController
+    participant MemberManagement
+    participant Member
+
+    opt เพิ่มสินค้า
+        autonumber
+        Owner-)System: addProduct(type, name, price)
+        System->>ProductFactory: createProduct(type, name, price)
+        ProductFactory-)Product: Product(name, price)
+        Product--)Owner: สินค้าถูกเพิ่มแล้ว
+        ProductFactory-->>System: product
+        System-)System: products.add(product)
+    end
+
+    opt ลบสินค้า
+        Owner-)System: deleteProduct(name)
+        System->>MenuView: getProductByName(name)
+        MenuView-->>System: product
+        System-)System: products.remove(product)
+    end
+
+    loop System
+        System->>User: displayOptions()
+        User-->>System: เลือกรายการ
+
+        opt ออกจากโปรแกรม
+            System--)User: ขอบคุณที่ใช้บริการค่ะ >///<
+            System-)System: stop
+        end
+
+        opt ดูเมนู
+            System->>User: ขนม / เครื่องเดื่อม
+            User-->>System: type
+            System-)MenuView: displayMenu(type)
+            alt ประเภทถูกต้อง
+                MenuView--)User: menu
+            else ประเภทไม่ถูกต้อง
+                MenuView--)User: กรุณาเลือกตัวเลือกที่ถูกต้องค่ะ
+            end
+        end
+
+        opt เลือกสินค้า
+            System->>User: คุณต้องการสินค้าอะไรหรอคะ?
+            User-->>System: name
+            System->>MenuView: getProductByName(name)
+            alt ชื่อถูกต้อง
+                MenuView-->>System: product
+                System->>User: คุณต้องการจำนวนเท่าไรคะ?
+                User-->>System: quantity
+                System--)OrderController: addToCart(product, quantity)
+                OrderController--)User: รายละเอียดสินค้าที่เลือก
+            else ชื่อไม่ถูกต้อง
+                MenuView-->>User: ชื่อสินค้าไม่ถูกต้องค่ะ
+            end
+        end
+
+        opt ชำระเงิน
+            System->>OrderController: getStatus()
+            OrderController-->>System: status
+            alt มีสินค้าในตะกร้า
+                System->>User: คุณมีสมาชิกมั้ยคะ?
+                User-->>System: answer
+                alt มีสมาชิก
+                    System->>User: โปรดระบุชื่อสมาชิกของคุณค่ะ
+                    User-->>System: name
+                    System->>MemberManagement: findMember(name)
+                    alt ไม่พบชื่อ
+                        MemberManagement--)User: ทางเราไม่เจอสมาชิกของคุณลูกค้าค่ะ
+                    end
+                    MemberManagement-->>System: member
+                else ไม่มีสมาชิก
+                    System->>User: คุณต้องการสมัครสมาชิกไหมคะ?
+                    alt ต้องการ
+                        System->>System: registMember(member)
+                        System->>User: โปรดระบุชื่อของคุณค่ะ
+                        User-->>System: name
+                        System-)MemberManagement: addMember(name)
+                        MemberManagement-)Member: Member(name)
+                        Member--)User: รายละเอียดสมาชิก
+                        System--)User: สมัครสมาชิกเรียบร้อยค่ะ!
+                        System->>MemberManagement: findMember(name)
+            MemberManagement-->>System: member
+                    else ไม่ต้องการ
+                        System-)System: member = null
+                    end
+                end
+            System--)User: กำลังชำระเงินค่ะ...
+            System-)OrderController: pay(member)
+            OrderController--)User: ราคารวมสุทธิ ? ¥
+            OrderController-)OrderController: orderList.add(productsInCart)
+            OrderController-)OrderController: productsInCart.clear()
+            else ไม่มีสินค้าในตะกร้า
+                System--)User: ไม่มีสินค้าในตะกร้าคะ
+            end
+        end
+
+        opt ยกเลิกการสั่งซื้อ
+            System--)User: กำลังยกเลิกการสั่งซื้อค่ะ...
+            System-)OrderController: cancel()
+            OrderController--)User: รายการสินค้าถูกยกเลิกแล้วค่ะ
+        end
+
+        opt สมัครสมาชิก
+            System->>System: registMember(member)
+            System->>User: โปรดระบุชื่อของคุณค่ะ
+            User-->>System: name
+            System-)MemberManagement: addMember(name)
+            MemberManagement-)Member: Member(name)
+            Member--)User: รายละเอียดสมาชิก
+            System--)User: สมัครสมาชิกเรียบร้อยค่ะ!
+            System->>MemberManagement: findMember(name)
+            MemberManagement-->>System: member
+        end
+
+        opt รายการผิด
+            System--)User: กรุณาเลือกตัวเลือกที่ถูกต้องค่ะ
+        end
+
+    end
