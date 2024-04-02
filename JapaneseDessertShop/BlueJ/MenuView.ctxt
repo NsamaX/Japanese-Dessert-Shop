@@ -1,0 +1,7 @@
+#BlueJ class context
+comment0.target=MenuView
+comment1.params=type
+comment1.target=void\ displayMenu(int)
+comment2.params=productName
+comment2.target=Product\ getProductByName(java.lang.String)
+numComments=3

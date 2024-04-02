@@ -1,0 +1,5 @@
+#BlueJ class context
+comment0.target=Factory
+comment1.params=type\ name\ price
+comment1.target=Product\ createProduct(java.lang.String,\ java.lang.String,\ double)
+numComments=2
